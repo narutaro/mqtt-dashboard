@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>MQTT DASH</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <!-- Fontawsome -->
+  <script src="https://kit.fontawesome.com/a1763a7d6f.js" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="chartjs-plugin-streaming.min.js"></script>
+</head>
+
+<body>
+
+<div class="container" style="margin-top: 40px">
+  <div class="row">
+    <div class="four columns">4</div>
+    <div class="four columns">4</div>
+    <div class="four columns">4</div>
+  </div>
+  <div class="row">
+    <div class="twelve columns">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    datasets: [{
+      data: []
+    }, {
+      data: []
+    }]
+  },
+  options: {
+    scales: {
+      xAxes: [{
+        type: 'realtime'
+      }]
+    }
+  }
+});
+</script>
+
+</body>
+</html>
+
