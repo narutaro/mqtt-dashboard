@@ -25,9 +25,9 @@
 
 <div class="container" style="margin-top: 40px">
   <div class="row">
-    <div class="four columns board"><span>Power</span><h1 class=>123</h1></div>
-    <div class="four columns board"><span>Temperture</span><h1>456</h1></div>
-    <div class="four columns board"><span>Humidity</span><h1>789</h1></div>
+    <div class="four columns"><p class="board">Power</p><h1 class="board">123</h1></div>
+    <div class="four columns"><p class="board">Temperture</p><h1 class="board">456</h1></div>
+    <div class="four columns"><p class="board">Humidity</p><h1 class="board">789</h1></div>
   </div>
   <div class="row" style="margin-top: 40px">
     <div class="twelve columns">
@@ -61,6 +61,7 @@ var chart = new Chart(ctx, {
 .board {
   text-align: center;
   font-family: Rajdhani;
+  font-weight: bold;
 }
 </style>
 
