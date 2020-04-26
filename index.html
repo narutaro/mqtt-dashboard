@@ -37,20 +37,57 @@
 </div>
 
 <script>
+
+var chartColors = {
+	red: 'rgb(255, 99, 132)',
+	orange: 'rgb(255, 159, 64)',
+	yellow: 'rgb(255, 205, 86)',
+	green: 'rgb(75, 192, 192)',
+	blue: 'rgb(54, 162, 235)',
+	purple: 'rgb(153, 102, 255)',
+	grey: 'rgb(201, 203, 207)'
+};
+
 var ctx = document.getElementById('myChart').getContext('2d');
 var chart = new Chart(ctx, {
   type: 'line',
   data: {
-    datasets: [{
-      data: []
-    }, {
-      data: []
-    }]
+		datasets: [{
+			label: 'Power',
+			borderColor: chartColors.red,
+			fill: false,
+			data: []
+		},
+    {
+			label: 'Temperture',
+			borderColor: chartColors.blue,
+			fill: false,
+			cubicInterpolationMode: 'monotone',
+			data: []
+		},
+    {
+			label: 'Temperture',
+			borderColor: chartColors.yellow,
+			fill: false,
+			cubicInterpolationMode: 'monotone',
+			data: []
+		}]
   },
   options: {
     scales: {
       xAxes: [{
-        type: 'realtime'
+        type: 'realtime',
+        realtime: {
+          delay: 2000,
+          onRefresh: function(chart) {
+            chart.data.datasets.forEach(function(dataset) {
+              dataset.data.push({
+                x: Date.now(),
+                y: Math.random()
+              });
+            });
+          }
+        }
       }]
     }
   }
