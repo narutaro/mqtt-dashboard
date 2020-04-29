@@ -27,8 +27,29 @@
 
 <body>
 
+<div id="app">
+
 <div class="container" style="margin-top: 40px">
-  <div id="app" class="row">
+  <h1 class="raj">MQTT Generator</h1>
+</div>
+
+<div class="container bg" style="margin-top: 40px">
+  <div class="row">
+    <h1 class="raj">Publisher:</h1>
+  </div>
+  <div class="row">
+    <div class="twelve columns">
+      <button class="button-primary" v-on:click="start()">start</button>
+      <button @click="stop()">stop</button>
+    </div>
+  </div>
+</div>
+
+<div class="container bg" style="margin-top: 60px">
+  <div class="row">
+    <h1 class="raj">Subscriber:</h1>
+  </div>
+  <div class="row">
     <div class="three columns"><p class="board">Time</p><h1 class="board">{{ time }}</h1></div>
     <div class="three columns"><p class="board">Power</p><h1 class="board">{{ amp }}</h1></div>
     <div class="three columns"><p class="board">Temperture</p><h1 class="board">{{ tem }}</h1></div>
@@ -42,6 +63,8 @@
     </div>
   </div>
 </div>
+
+</div><!-- app -->
 
 <script>
 
@@ -61,49 +84,53 @@ var app = new Vue({
   el: '#app',
   data () {
     return {
-      time: '',
-      amp: '',
-      tem: '',
-      hum: ''
+      brokerUrl: 'wss://test.mosquitto.org:8081',
+      topic: "floor1/room1",
+      pub: '',
+      sub: '',
+      time: 0,
+      amp: 0,
+      tem: 0,
+      hum: 0
     }
   },
-  created: function () {
-    /*
-    setInterval(() => {
-      this.time = getHHMISS(app.epoch)
-    }, 1000);
-    */
-
+  mounted () {
     // MQTT
-    let pub = mqtt.connect('wss://test.mosquitto.org:8081');
-    let sub = mqtt.connect('wss://test.mosquitto.org:8081');
-    let topic = "floor1/room1"
+    this.pub = mqtt.connect(this.brokerUrl);
+    this.sub = mqtt.connect(this.brokerUrl);
+  },
+  methods: {
+    start: function () {
+     
+      console.log("start");
 
-    sub.subscribe(topic);
+      app.sub.subscribe(this.topic);
 
-    setInterval(() => {
-      const time = Date.now().toString();
-      const amp = Math.floor( Math.random() * 11 );
-      const tem = Math.floor( Math.random() * 11 );
-      const hum = Math.floor( Math.random() * 11 );
-      let metric = '{"time":' + time + ', "name": "sensor1", "amp":' + amp + ', "tem":' + tem + ', "hum":' + hum + '}'
-      pub.publish(topic, metric);
-    }, 1000);
+      setInterval(() => {
+        const time = Date.now().toString();
+        const amp = Math.floor( Math.random() * 11 );
+        const tem = Math.floor( Math.random() * 11 );
+        const hum = Math.floor( Math.random() * 11 );
+        let metric = '{"time":' + time + ', "name": "sensor1", "amp":' + amp + ', "tem":' + tem + ', "hum":' + hum + '}'
+        this.pub.publish(app.topic, metric);
+      }, 1000);
 
-    sub.on('message', function (topic, message) { // message is Buffer
-      sensorData = JSON.parse(message.toString())
-      app.time = getHHMISS(sensorData.time);
-      app.amp = sensorData.amp;
-      app.tem = sensorData.tem;
-      app.hum = sensorData.hum;
-      console.log(sensorData);
-    });
-
-    setInterval(() => {
-      sub.end();
-      pub.end();
-    }, 20000);
-
+      this.sub.on('message', function (topic, message) { // message is Buffer
+        sensorData = JSON.parse(message.toString())
+        app.time = getHHMISS(sensorData.time);
+        app.amp = sensorData.amp;
+        app.tem = sensorData.tem;
+        app.hum = sensorData.hum;
+        console.log(sensorData);
+      });
+    },
+    stop: function () {
+    //  setInterval(() => {
+      console.log("stop");   
+      this.sub.end();
+      this.pub.end();
+    //  }, 20000);
+    }
   }
 })
 
@@ -174,6 +201,20 @@ var chart = new Chart(ctx, {
   font-family: Rajdhani;
   font-weight: bold;
 }
+
+.raj {
+  font-family: Rajdhani;
+  font-weight: bold;
+}
+
+.bg {
+  padding-right: 30px;
+  padding-left: 30px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  background-color: lightyellow;
+}
+
 </style>
 
 </body>
