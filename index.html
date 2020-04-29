@@ -16,6 +16,8 @@
   <link rel="icon" type="image/png" href="images/favicon.png">
   <!-- Vue.js -->
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <!-- MQTT.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Fontawsome -->
   <script src="https://kit.fontawesome.com/a1763a7d6f.js" crossorigin="anonymous"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
@@ -43,23 +45,70 @@
 
 <script>
 
+function getHHMISS(epoch){
+  let dt = new Date(epoch);
+  let hh = dt.getHours();
+  let mi = dt.getMinutes();
+  let ss = dt.getSeconds();
+  hh = ("00" + hh).slice(-2);
+  mi = ("00" + mi).slice(-2);
+  ss = ("00" + ss).slice(-2);
+  return hh + ":" + mi + ":" + ss;
+}
+
+// Vue
 var app = new Vue({
   el: '#app',
   data () {
     return {
-      time: '142000',
-      amp: '10',
-      tem: '20',
-      hum: '30'
+      time: '',
+      amp: '',
+      tem: '',
+      hum: ''
     }
   },
   created: function () {
+    /*
     setInterval(() => {
-      this.time = Date.now().toString();
+      this.time = getHHMISS(app.epoch)
     }, 1000);
+    */
+
+    // MQTT
+    let pub = mqtt.connect('wss://test.mosquitto.org:8081');
+    let sub = mqtt.connect('wss://test.mosquitto.org:8081');
+    let topic = "floor1/room1"
+
+    sub.subscribe(topic);
+
+    setInterval(() => {
+      const time = Date.now().toString();
+      const amp = Math.floor( Math.random() * 11 );
+      const tem = Math.floor( Math.random() * 11 );
+      const hum = Math.floor( Math.random() * 11 );
+      let metric = '{"time":' + time + ', "name": "sensor1", "amp":' + amp + ', "tem":' + tem + ', "hum":' + hum + '}'
+      pub.publish(topic, metric);
+    }, 1000);
+
+    sub.on('message', function (topic, message) { // message is Buffer
+      sensorData = JSON.parse(message.toString())
+      app.time = getHHMISS(sensorData.time);
+      app.amp = sensorData.amp;
+      app.tem = sensorData.tem;
+      app.hum = sensorData.hum;
+      console.log(sensorData);
+    });
+
+    setInterval(() => {
+      sub.end();
+      pub.end();
+    }, 20000);
+
   }
 })
 
+
+// CHART
 var chartColors = {
 	red: 'rgb(255, 99, 132)',
 	orange: 'rgb(255, 159, 64)',
