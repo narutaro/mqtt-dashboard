@@ -35,19 +35,20 @@
 
 <div class="container bg" style="margin-top: 40px">
   <div class="row">
-    <h1 class="raj">Publisher:</h1>
+    <h1 class="raj">Publisher: {{ psn }}</h1>
   </div>
   <div class="row">
     <div class="twelve columns">
-      <button class="button-primary" v-on:click="start()">start</button>
-      <button @click="stop()">stop</button>
+      <button class="button-primary" @click="start()">start</button>
+      <button class="button-primary" @click="stop()">pause</button>
+      <button class="button-primary" @click="reset()">reset</button>
     </div>
   </div>
 </div>
 
 <div class="container bg" style="margin-top: 60px">
   <div class="row">
-    <h1 class="raj">Subscriber:</h1>
+    <h1 class="raj">Subscriber: {{ ssn }}</h1>
   </div>
   <div class="row">
     <div class="three columns"><p class="board">Time</p><h1 class="board">{{ time }}</h1></div>
@@ -91,45 +92,53 @@ var app = new Vue({
       time: 0,
       amp: 0,
       tem: 0,
-      hum: 0
+      hum: 0,
+      psn: 0, // pub serial number
+      ssn: 0  // sub serial number
     }
   },
   mounted () {
     // MQTT
     this.pub = mqtt.connect(this.brokerUrl);
     this.sub = mqtt.connect(this.brokerUrl);
+    this.sub.subscribe(this.topic);
+    this.sub.on('message', function (topic, message) { // message is Buffer
+      sensorData = JSON.parse(message.toString())
+      app.time = getHHMISS(parseInt(sensorData.time));
+      app.ssn = sensorData.psn;
+      app.amp = sensorData.amp;
+      app.tem = sensorData.tem;
+      app.hum = sensorData.hum;
+      console.log(sensorData);
+    });
   },
   methods: {
-    start: function () {
-     
+    start() {
       console.log("start");
-
-      app.sub.subscribe(this.topic);
-
-      setInterval(() => {
+      pubLoop = setInterval(() => {
+        this.psn++
         const time = Date.now().toString();
         const amp = Math.floor( Math.random() * 11 );
         const tem = Math.floor( Math.random() * 11 );
         const hum = Math.floor( Math.random() * 11 );
-        let metric = '{"time":' + time + ', "name": "sensor1", "amp":' + amp + ', "tem":' + tem + ', "hum":' + hum + '}'
-        this.pub.publish(app.topic, metric);
+        let metric = {"psn": this.psn, "time": time, "name": "sensor1", "amp": amp, "tem": tem, "hum": hum }
+        this.pub.publish(app.topic, JSON.stringify(metric));
       }, 1000);
-
-      this.sub.on('message', function (topic, message) { // message is Buffer
-        sensorData = JSON.parse(message.toString())
-        app.time = getHHMISS(sensorData.time);
-        app.amp = sensorData.amp;
-        app.tem = sensorData.tem;
-        app.hum = sensorData.hum;
-        console.log(sensorData);
-      });
     },
-    stop: function () {
-    //  setInterval(() => {
+    stop() {
       console.log("stop");   
-      this.sub.end();
-      this.pub.end();
+      clearInterval(pubLoop);
+    //  setInterval(() => {
+      //this.sub.end();
+      //this.pub.end();
     //  }, 20000);
+    },
+    reset() {
+      console.log("reset");   
+      this.psn = this.ssn = this.time = this.amp = this.tem = this.hum = 0; 
+      this.pub = mqtt.connect(this.brokerUrl);
+      this.sub = mqtt.connect(this.brokerUrl);
+      this.sub.subscribe(this.topic);
     }
   }
 })
