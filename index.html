@@ -58,9 +58,7 @@
   </div>
   <div class="row" style="margin-top: 40px">
     <div class="twelve columns">
-<!--
       <canvas id="myChart"></canvas>
--->
     </div>
   </div>
 </div>
@@ -80,6 +78,17 @@ function getHHMISS(epoch){
   return hh + ":" + mi + ":" + ss;
 }
 
+// Buffer
+let sensorDataBuffer = [];
+
+function addSensorDataBuffer(sensorData) {
+  sensorDataBuffer.push(JSON.parse(sensorData))
+}
+
+function shiftSensorDataBuffer() {
+  return sensorDataBuffer.shift()
+}
+
 // Vue
 var app = new Vue({
   el: '#app',
@@ -94,8 +103,70 @@ var app = new Vue({
       tem: 0,
       hum: 0,
       psn: 0, // pub serial number
-      ssn: 0  // sub serial number
+      ssn: 0, // sub serial number
+      //sdbuf: [] // sensor data buffer array
     }
+  },
+  created () {
+/*
+    var chartColors = {
+      red: 'rgb(255, 99, 132)',
+      orange: 'rgb(255, 159, 64)',
+      yellow: 'rgb(255, 205, 86)',
+      green: 'rgb(75, 192, 192)',
+      blue: 'rgb(54, 162, 235)',
+      purple: 'rgb(153, 102, 255)',
+      grey: 'rgb(201, 203, 207)'
+    };
+
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'Power',
+          borderColor: chartColors.red,
+          fill: false,
+          data: []
+        },
+        {
+          label: 'Temperture',
+          borderColor: chartColors.blue,
+          fill: false,
+          cubicInterpolationMode: 'monotone',
+          data: []
+        },
+        {
+          label: 'Temperture',
+          borderColor: chartColors.yellow,
+          fill: false,
+          cubicInterpolationMode: 'monotone',
+          data: []
+        }]
+      },
+      options: {
+        legend: {
+          position: 'bottom'
+        },
+        scales: {
+          xAxes: [{
+            type: 'realtime',
+            realtime: {
+              delay: 2000,
+              onRefresh: function(chart) {
+                chart.data.datasets.forEach(function(dataset) {
+                  dataset.data.push({
+                    x: Date.now(),
+                    y: Math.random()
+                  });
+                });
+              }
+            }
+          }]
+        }
+      }
+    });
+*/
   },
   mounted () {
     // MQTT
@@ -109,7 +180,12 @@ var app = new Vue({
       app.amp = sensorData.amp;
       app.tem = sensorData.tem;
       app.hum = sensorData.hum;
+      //app.sdbuf.push(sensorData);
       console.log(sensorData);
+      console.log(message.toString());
+      addSensorDataBuffer(message.toString());
+      console.log("buffLength: " + sensorDataBuffer.length)
+      //console.log(app.sdbuf);
     });
   },
   methods: {
@@ -143,6 +219,13 @@ var app = new Vue({
   }
 })
 
+/*
+setInterval(() => {
+ console.log("shift: " + shiftSensorDataBuffer())
+}, 1000);
+*/
+
+
 
 // CHART
 var chartColors = {
@@ -173,7 +256,7 @@ var chart = new Chart(ctx, {
 			data: []
 		},
     {
-			label: 'Temperture',
+			label: 'Humidity',
 			borderColor: chartColors.yellow,
 			fill: false,
 			cubicInterpolationMode: 'monotone',
@@ -188,12 +271,21 @@ var chart = new Chart(ctx, {
       xAxes: [{
         type: 'realtime',
         realtime: {
-          delay: 2000,
+          duration: 1000,
+          refresh: 2000,
+          delay: 5000,
           onRefresh: function(chart) {
+
+                //console.log("SHIFT shiftSensorDataBuffer().time: " + shiftSensorDataBuffer().time);
+                //console.log("SHIFT shiftSensorDataBuffer().amp: " + shiftSensorDataBuffer().amp);
+
             chart.data.datasets.forEach(function(dataset) {
               dataset.data.push({
+                //x: new Date(parseInt(shiftSensorDataBuffer().time)), 
                 x: Date.now(),
-                y: Math.random()
+                y: shiftSensorDataBuffer().amp
+                //x: Date.now(),
+                //y: Math.random()
               });
             });
           }
@@ -202,6 +294,7 @@ var chart = new Chart(ctx, {
     }
   }
 });
+
 </script>
 
 <style>
