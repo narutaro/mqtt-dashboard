@@ -14,30 +14,51 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="images/favicon.png">
+  <!-- Vue.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <!-- Fontawsome -->
   <script src="https://kit.fontawesome.com/a1763a7d6f.js" crossorigin="anonymous"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="chartjs-plugin-streaming.min.js"></script>
+  <script type="text/javascript" src="js/chartjs-plugin-streaming.min.js"></script>
 </head>
 
 <body>
 
 <div class="container" style="margin-top: 40px">
-  <div class="row">
-    <div class="three columns"><p class="board">Time</p><h1 class="board">123</h1></div>
-    <div class="three columns"><p class="board">Power</p><h1 class="board">123</h1></div>
-    <div class="three columns"><p class="board">Temperture</p><h1 class="board">456</h1></div>
-    <div class="three columns"><p class="board">Humidity</p><h1 class="board">789</h1></div>
+  <div id="app" class="row">
+    <div class="three columns"><p class="board">Time</p><h1 class="board">{{ time }}</h1></div>
+    <div class="three columns"><p class="board">Power</p><h1 class="board">{{ amp }}</h1></div>
+    <div class="three columns"><p class="board">Temperture</p><h1 class="board">{{ tem }}</h1></div>
+    <div class="three columns"><p class="board">Humidity</p><h1 class="board">{{ hum }}</h1></div>
   </div>
   <div class="row" style="margin-top: 40px">
     <div class="twelve columns">
+<!--
       <canvas id="myChart"></canvas>
+-->
     </div>
   </div>
 </div>
 
 <script>
+
+var app = new Vue({
+  el: '#app',
+  data () {
+    return {
+      time: '142000',
+      amp: '10',
+      tem: '20',
+      hum: '30'
+    }
+  },
+  created: function () {
+    setInterval(() => {
+      this.time = Date.now().toString();
+    }, 1000);
+  }
+})
 
 var chartColors = {
 	red: 'rgb(255, 99, 132)',
