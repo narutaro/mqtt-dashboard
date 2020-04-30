@@ -78,15 +78,15 @@ function getHHMISS(epoch){
   return hh + ":" + mi + ":" + ss;
 }
 
-// Buffer
-let sensorDataBuffer = [];
+// Queue from Vue.js to Chart.js
+let queue = [];
 
-function addSensorDataBuffer(sensorData) {
-  sensorDataBuffer.push(JSON.parse(sensorData))
+function enqueue(sensorData) {
+  queue.push(JSON.parse(sensorData))
 }
 
-function shiftSensorDataBuffer() {
-  return sensorDataBuffer.shift()
+function dequeue() {
+  return queue.shift()
 }
 
 // Vue
@@ -108,65 +108,6 @@ var app = new Vue({
     }
   },
   created () {
-/*
-    var chartColors = {
-      red: 'rgb(255, 99, 132)',
-      orange: 'rgb(255, 159, 64)',
-      yellow: 'rgb(255, 205, 86)',
-      green: 'rgb(75, 192, 192)',
-      blue: 'rgb(54, 162, 235)',
-      purple: 'rgb(153, 102, 255)',
-      grey: 'rgb(201, 203, 207)'
-    };
-
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        datasets: [{
-          label: 'Power',
-          borderColor: chartColors.red,
-          fill: false,
-          data: []
-        },
-        {
-          label: 'Temperture',
-          borderColor: chartColors.blue,
-          fill: false,
-          cubicInterpolationMode: 'monotone',
-          data: []
-        },
-        {
-          label: 'Temperture',
-          borderColor: chartColors.yellow,
-          fill: false,
-          cubicInterpolationMode: 'monotone',
-          data: []
-        }]
-      },
-      options: {
-        legend: {
-          position: 'bottom'
-        },
-        scales: {
-          xAxes: [{
-            type: 'realtime',
-            realtime: {
-              delay: 2000,
-              onRefresh: function(chart) {
-                chart.data.datasets.forEach(function(dataset) {
-                  dataset.data.push({
-                    x: Date.now(),
-                    y: Math.random()
-                  });
-                });
-              }
-            }
-          }]
-        }
-      }
-    });
-*/
   },
   mounted () {
     // MQTT
@@ -183,8 +124,8 @@ var app = new Vue({
       //app.sdbuf.push(sensorData);
       console.log(sensorData);
       console.log(message.toString());
-      addSensorDataBuffer(message.toString());
-      console.log("buffLength: " + sensorDataBuffer.length)
+      enqueue(message.toString());
+      console.log("queue size: " + queue.length)
       //console.log(app.sdbuf);
     });
   },
@@ -224,8 +165,6 @@ setInterval(() => {
  console.log("shift: " + shiftSensorDataBuffer())
 }, 1000);
 */
-
-
 
 // CHART
 var chartColors = {
@@ -271,22 +210,25 @@ var chart = new Chart(ctx, {
       xAxes: [{
         type: 'realtime',
         realtime: {
-          duration: 1000,
-          refresh: 2000,
-          delay: 5000,
+          //duration: 1000,
+          //refresh: 2000,
+          delay: 2000,
           onRefresh: function(chart) {
-
-                //console.log("SHIFT shiftSensorDataBuffer().time: " + shiftSensorDataBuffer().time);
-                //console.log("SHIFT shiftSensorDataBuffer().amp: " + shiftSensorDataBuffer().amp);
-
-            chart.data.datasets.forEach(function(dataset) {
-              dataset.data.push({
-                //x: new Date(parseInt(shiftSensorDataBuffer().time)), 
-                x: Date.now(),
-                y: shiftSensorDataBuffer().amp
-                //x: Date.now(),
-                //y: Math.random()
-              });
+            // Power
+            let sensorData = dequeue()
+            chart.data.datasets[0].data.push({
+              x: Date.now(),
+              y: sensorData.amp
+            });
+            // Temp
+            chart.data.datasets[1].data.push({
+              x: Date.now(),
+              y: sensorData.tem
+            });
+            // Hum
+            chart.data.datasets[2].data.push({
+              x: Date.now(),
+              y: sensorData.hum
             });
           }
         }
