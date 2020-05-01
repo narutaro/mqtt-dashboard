@@ -78,6 +78,14 @@
 
 <script>
 
+function fluctuation(val) {
+  const min = 0.8
+  const max = 1.2
+  const fluc = Math.random() * (max - min) + min
+  val = fluc * val
+  return Math.round(val * 100)/100;
+}
+
 function getHHMISS(epoch){
   let dt = new Date(epoch);
   let hh = dt.getHours();
@@ -142,13 +150,19 @@ var app = new Vue({
     start() {
       console.log("start");
       topic = this.topic;
+      this.amp = Math.floor( Math.random() * 10 + 1);
+      this.tem = Math.floor( Math.random() * 10 + 1);
+      this.hum = Math.floor( Math.random() * 10 + 1);
       pubLoop = setInterval(() => {
         this.psn++
         const time = Date.now().toString();
-        const amp = Math.floor( Math.random() * 11 );
-        const tem = Math.floor( Math.random() * 11 );
-        const hum = Math.floor( Math.random() * 11 );
-        let metric = {"psn": this.psn, "time": time, "name": "sensor1", "amp": amp, "tem": tem, "hum": hum }
+        this.amp = fluctuation(this.amp)
+        this.tem = fluctuation(this.tem)
+        this.hum = fluctuation(this.hum)
+        //const amp = Math.floor( Math.random() * 11 );
+        //const tem = Math.floor( Math.random() * 11 );
+        //const hum = Math.floor( Math.random() * 11 );
+        let metric = {"psn": this.psn, "time": time, "name": "sensor1", "amp": this.amp, "tem": this.tem, "hum": this.hum }
         this.pub.publish(topic, JSON.stringify(metric));
       }, 1000);
     },
@@ -159,7 +173,7 @@ var app = new Vue({
     reset() {
       console.log("reset");   
       this.topic = topicName();
-      this.psn = this.ssn = this.time = this.amp = this.tem = this.hum = 0; 
+      this.psn = this.ssn = this.time = this.amp = this.tem = this.hum = 0;
       this.pub = mqtt.connect(this.brokerUrl);
       this.sub = mqtt.connect(this.brokerUrl);
       this.sub.subscribe(this.topic);
