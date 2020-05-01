@@ -141,6 +141,7 @@ var app = new Vue({
   methods: {
     start() {
       console.log("start");
+      topic = this.topic;
       pubLoop = setInterval(() => {
         this.psn++
         const time = Date.now().toString();
@@ -148,7 +149,7 @@ var app = new Vue({
         const tem = Math.floor( Math.random() * 11 );
         const hum = Math.floor( Math.random() * 11 );
         let metric = {"psn": this.psn, "time": time, "name": "sensor1", "amp": amp, "tem": tem, "hum": hum }
-        this.pub.publish(app.topic, JSON.stringify(metric));
+        this.pub.publish(topic, JSON.stringify(metric));
       }, 1000);
     },
     stop() {
@@ -162,6 +163,18 @@ var app = new Vue({
       this.pub = mqtt.connect(this.brokerUrl);
       this.sub = mqtt.connect(this.brokerUrl);
       this.sub.subscribe(this.topic);
+      this.sub.on('message', function (topic, message) { // message is Buffer
+        sensorData = JSON.parse(message.toString())
+        app.time = getHHMISS(parseInt(sensorData.time));
+        app.ssn = sensorData.psn;
+        app.amp = sensorData.amp;
+        app.tem = sensorData.tem;
+        app.hum = sensorData.hum;
+        console.log(sensorData);
+        //console.log(message.toString());
+        enqueue(message.toString());
+        console.log("queue size: " + queue.length)
+      });
     }
   }
 })
