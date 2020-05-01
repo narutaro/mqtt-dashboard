@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>MQTT DASH</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body>
+
+<script>
+let pub = mqtt.connect('wss://test.mosquitto.org:8081');
+let sub = mqtt.connect('wss://test.mosquitto.org:8081');
+let topic = "floor1/room1"
+
+
+sub.subscribe(topic);
+
+setInterval(() => {
+  const time = Date.now().toString();
+  const amp = Math.floor( Math.random() * 11 );
+  const tem = Math.floor( Math.random() * 11 );
+  const hum = Math.floor( Math.random() * 11 );
+  let metric = '{"time":' + time + ', "name": "sensor1", "amp":' + amp + ', "temp":' + tem + ', "hum":' + hum + '}'
+  pub.publish(topic, metric);
+}, 1000);
+
+sub.on('message', function (topic, message) { // message is Buffer
+  console.log(message.toString());
+});
+
+setInterval(() => {
+  sub.end();
+  pub.end();
+}, 20000);
+
+</script>
+
+</body>
+
+</html>
+
