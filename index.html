@@ -43,7 +43,7 @@
   </div>
 </div>
 
-<div class="container bg" style="margin-top: 40px">
+<div class="container bg border" style="margin-top: 40px">
   <div class="row">
     <h2 class="raj">Publisher: {{ psn }}</h2>
   </div>
@@ -56,7 +56,7 @@
   </div>
 </div>
 
-<div class="container bg" style="margin-top: 60px">
+<div class="container bg border" style="margin-top: 60px">
   <div class="row">
     <h2 class="raj">Subscriber: {{ ssn }}</h2>
   </div>
@@ -269,6 +269,7 @@ var chart = new Chart(ctx, {
 </script>
 
 <style>
+
 .board {
   text-align: center;
   font-family: Rajdhani;
@@ -285,7 +286,13 @@ var chart = new Chart(ctx, {
   padding-left: 30px;
   padding-top: 30px;
   padding-bottom: 30px;
-  background-color: lightyellow;
+  /* background-color: lightyellow; */
+}
+
+.border {
+	border: 1px solid #999;
+  border-radius: 5px 5px 5px 5px;
+  border-color: lightgray;
 }
 
 </style>
