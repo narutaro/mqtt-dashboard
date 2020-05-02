@@ -241,22 +241,23 @@ var chart = new Chart(ctx, {
         realtime: {
           //duration: 1000,
           //refresh: 2000,
-          delay: 2000,
+          delay: 3000,
           onRefresh: function(chart) {
+            let sensorData = dequeue();
+            let timeFromSensor = new Date(parseInt(sensorData.time));
             // Power
-            let sensorData = dequeue()
             chart.data.datasets[0].data.push({
-              x: Date.now(),
+              x: timeFromSensor,
               y: sensorData.amp
             });
             // Temp
             chart.data.datasets[1].data.push({
-              x: Date.now(),
+              x: timeFromSensor,
               y: sensorData.tem
             });
             // Hum
             chart.data.datasets[2].data.push({
-              x: Date.now(),
+              x: timeFromSensor,
               y: sensorData.hum
             });
           }
