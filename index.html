@@ -78,6 +78,7 @@
 
 <script>
 
+// Generate fluctuation(80%-120%) for the sensor readings
 function fluctuation(val) {
   const min = 0.8
   const max = 1.2
@@ -97,7 +98,7 @@ function getHHMISS(epoch){
   return hh + ":" + mi + ":" + ss;
 }
 
-// Queue from Vue.js to Chart.js
+// Queue which bridge between Vue.js and Chart.js
 let queue = [];
 
 function enqueue(sensorData) {
@@ -108,7 +109,7 @@ function dequeue() {
   return queue.shift()
 }
 
-// Vue
+// Vue.js
 var app = new Vue({
   el: '#app',
   data () {
@@ -149,22 +150,21 @@ var app = new Vue({
   methods: {
     start() {
       console.log("start");
-      topic = this.topic;
-      this.amp = Math.floor( Math.random() * 10 + 1);
-      this.tem = Math.floor( Math.random() * 10 + 1);
-      this.hum = Math.floor( Math.random() * 10 + 1);
+
+      let pubAmp = Math.floor( Math.random() * 10 + 1);
+      let pubTem = Math.floor( Math.random() * 10 + 1);
+      let pubHum = Math.floor( Math.random() * 10 + 1);
+
       pubLoop = setInterval(() => {
         this.psn++
-        const time = Date.now().toString();
-        this.amp = fluctuation(this.amp)
-        this.tem = fluctuation(this.tem)
-        this.hum = fluctuation(this.hum)
-        //const amp = Math.floor( Math.random() * 11 );
-        //const tem = Math.floor( Math.random() * 11 );
-        //const hum = Math.floor( Math.random() * 11 );
-        let metric = {"psn": this.psn, "time": time, "name": "sensor1", "amp": this.amp, "tem": this.tem, "hum": this.hum }
-        this.pub.publish(topic, JSON.stringify(metric));
+        pubTime = Date.now().toString();
+        pubAmp = fluctuation(pubAmp)
+        pubTem = fluctuation(pubTem)
+        pubHum = fluctuation(pubHum)
+        let metric = { "psn": this.psn, "time": pubTime, "name": "sensor1", "amp": pubAmp, "tem": pubTem, "hum": pubHum }
+        this.pub.publish(app.topic, JSON.stringify(metric));
       }, 1000);
+
     },
     stop() {
       console.log("stop");   
@@ -174,9 +174,11 @@ var app = new Vue({
       console.log("reset");   
       this.topic = topicName();
       this.psn = this.ssn = this.time = this.amp = this.tem = this.hum = 0;
+
       this.pub = mqtt.connect(this.brokerUrl);
       this.sub = mqtt.connect(this.brokerUrl);
       this.sub.subscribe(this.topic);
+
       this.sub.on('message', function (topic, message) { // message is Buffer
         sensorData = JSON.parse(message.toString())
         app.time = getHHMISS(parseInt(sensorData.time));
@@ -193,7 +195,7 @@ var app = new Vue({
   }
 })
 
-// CHART
+// Chart.js
 var chartColors = {
   red: 'rgb(255, 99, 132)',
   orange: 'rgb(255, 159, 64)',
