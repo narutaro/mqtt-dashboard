@@ -166,7 +166,7 @@ var app = new Vue({
           app.pub.publish(app.topic, JSON.stringify(metric));
         }, 1000);
       };
-      setTimeout(send, 1000);
+      setTimeout(send, 1000); // wait for the sub.on done
 
     },
     stop() {
@@ -216,14 +216,12 @@ var chart = new Chart(ctx, {
       label: 'Temperture',
       borderColor: chartColors.blue,
       fill: false,
-      //cubicInterpolationMode: 'monotone',
       data: []
     },
     {
       label: 'Humidity',
       borderColor: chartColors.yellow,
       fill: false,
-      //cubicInterpolationMode: 'monotone',
       data: []
     }]
   },
@@ -238,7 +236,7 @@ var chart = new Chart(ctx, {
   }
 });
 
-// Initializa the chart with x amout of data points
+// Initializa the chart with 60 data points
 (function initChart() {
   chart.data.labels = new Array(60).fill("00:00:00");
   chart.data.datasets.forEach((dataset) => {
@@ -256,7 +254,7 @@ function resetChart() {
   chart.update();
 };
 
-// This function can be shorter
+// Slide the window in the chart
 function slide(sensorData) {
   chart.data.labels.push(getHHMISS(parseInt(sensorData.time)))
   chart.data.datasets[0].data.push(sensorData.amp);
@@ -280,6 +278,7 @@ function slide(sensorData) {
   text-align: center;
   font-family: Rajdhani;
   font-weight: bold;
+  margin-bottom: 0px;
 }
 
 .raj {
@@ -295,7 +294,7 @@ function slide(sensorData) {
 }
 
 .border {
-	border: 1px solid #999;
+  border: 1px solid #999;
   border-radius: 5px 5px 5px 5px;
   border-color: lightgray;
 }
