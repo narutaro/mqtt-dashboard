@@ -27,10 +27,8 @@
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <!-- MQTT.js -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <!-- Fontawsome
+  <!-- Fontawsome -->
   <script src="https://kit.fontawesome.com/a1763a7d6f.js" crossorigin="anonymous"></script>
-  -->
-  <!-- Chart.js -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="js/chartjs-plugin-streaming.min.js"></script>
@@ -109,6 +107,17 @@ function getHHMISS(epoch){
   return hh + ":" + mi + ":" + ss;
 }
 
+// Queue which bridge between Vue.js and Chart.js
+let queue = [];
+
+function enqueue(sensorData) {
+  queue.push(JSON.parse(sensorData))
+}
+
+function dequeue() {
+  return queue.shift()
+}
+
 // Vue.js
 var app = new Vue({
   el: '#app',
@@ -124,9 +133,6 @@ var app = new Vue({
       hum: 0,
       psn: 0, // pub serial number
       ssn: 0, // sub serial number
-      pubAmp: Math.floor( Math.random() * 10 + 1),
-      pubTem: Math.floor( Math.random() * 10 + 1),
-      pubHum: Math.floor( Math.random() * 10 + 1)
     }
   },
   created () {
@@ -137,29 +143,34 @@ var app = new Vue({
     this.pub = mqtt.connect(this.brokerUrl);
     this.sub = mqtt.connect(this.brokerUrl);
     this.sub.subscribe(this.topic);
+    this.sub.on('message', function (topic, message) { // message is Buffer
+      sensorData = JSON.parse(message.toString())
+      app.time = getHHMISS(parseInt(sensorData.time));
+      app.ssn = sensorData.psn;
+      app.amp = sensorData.amp;
+      app.tem = sensorData.tem;
+      app.hum = sensorData.hum;
+      console.log(sensorData);
+      //console.log(message.toString());
+      enqueue(message.toString());
+      console.log("queue size: " + queue.length)
+    });
   },
   methods: {
     start() {
       console.log("start");
 
-      this.sub.on('message', function (topic, message) { // message is Buffer
-        sensorData = JSON.parse(message.toString())
-        app.time = getHHMISS(parseInt(sensorData.time));
-        app.ssn = sensorData.psn;
-        app.amp = sensorData.amp;
-        app.tem = sensorData.tem;
-        app.hum = sensorData.hum;
-        console.log(sensorData);
-        slide(sensorData);
-      });
+      let pubAmp = Math.floor( Math.random() * 10 + 1);
+      let pubTem = Math.floor( Math.random() * 10 + 1);
+      let pubHum = Math.floor( Math.random() * 10 + 1);
 
       pubLoop = setInterval(() => {
         this.psn++
         pubTime = Date.now().toString();
-        this.pubAmp = fluctuation(this.pubAmp)
-        this.pubTem = fluctuation(this.pubTem)
-        this.pubHum = fluctuation(this.pubHum)
-        let metric = { "psn": this.psn, "time": pubTime, "name": "sensor1", "amp": this.pubAmp, "tem": this.pubTem, "hum": this.pubHum }
+        pubAmp = fluctuation(pubAmp)
+        pubTem = fluctuation(pubTem)
+        pubHum = fluctuation(pubHum)
+        let metric = { "psn": this.psn, "time": pubTime, "name": "sensor1", "amp": pubAmp, "tem": pubTem, "hum": pubHum }
         this.pub.publish(app.topic, JSON.stringify(metric));
       }, 1000);
 
@@ -177,11 +188,18 @@ var app = new Vue({
       this.sub = mqtt.connect(this.brokerUrl);
       this.sub.subscribe(this.topic);
 
-      this.pubAmp = Math.floor( Math.random() * 10 + 1);
-      this.pubTem = Math.floor( Math.random() * 10 + 1);
-      this.pubHum = Math.floor( Math.random() * 10 + 1);
-
-      resetChart();
+      this.sub.on('message', function (topic, message) { // message is Buffer
+        sensorData = JSON.parse(message.toString())
+        app.time = getHHMISS(parseInt(sensorData.time));
+        app.ssn = sensorData.psn;
+        app.amp = sensorData.amp;
+        app.tem = sensorData.tem;
+        app.hum = sensorData.hum;
+        console.log(sensorData);
+        //console.log(message.toString());
+        enqueue(message.toString());
+        console.log("queue size: " + queue.length)
+      });
     }
   }
 })
@@ -211,61 +229,52 @@ var chart = new Chart(ctx, {
       label: 'Temperture',
       borderColor: chartColors.blue,
       fill: false,
-      //cubicInterpolationMode: 'monotone',
+      cubicInterpolationMode: 'monotone',
       data: []
     },
     {
       label: 'Humidity',
       borderColor: chartColors.yellow,
       fill: false,
-      //cubicInterpolationMode: 'monotone',
+      cubicInterpolationMode: 'monotone',
       data: []
     }]
   },
   options: {
-    animation: {
-      //duration: 2000,
-    },
-    //animation: false,
     legend: {
       position: 'bottom'
     },
+    scales: {
+      xAxes: [{
+        type: 'realtime',
+        realtime: {
+          //duration: 1000,
+          //refresh: 2000,
+          delay: 3000,
+          onRefresh: function(chart) {
+            let sensorData = dequeue();
+            let timeFromSensor = new Date(parseInt(sensorData.time));
+            // Power
+            chart.data.datasets[0].data.push({
+              x: timeFromSensor,
+              y: sensorData.amp
+            });
+            // Temp
+            chart.data.datasets[1].data.push({
+              x: timeFromSensor,
+              y: sensorData.tem
+            });
+            // Hum
+            chart.data.datasets[2].data.push({
+              x: timeFromSensor,
+              y: sensorData.hum
+            });
+          }
+        }
+      }]
+    }
   }
 });
-
-// Initializa the chart with x amout of data points
-(function initChart() {
-  chart.data.labels = new Array(60).fill("00:00:00");
-  chart.data.datasets.forEach((dataset) => {
-    dataset.data = new Array(60).fill();
-  });
-  chart.update();
-}());
-
-// Reset the chart
-function resetChart() {
-  chart.data.labels = new Array(60).fill("00:00:00");
-  chart.data.datasets.forEach((dataset) => {
-    dataset.data = new Array(60).fill();
-  });
-  chart.update();
-};
-
-// This function can be shorter
-function slide(sensorData) {
-  chart.data.labels.push(getHHMISS(parseInt(sensorData.time)))
-  chart.data.datasets[0].data.push(sensorData.amp);
-  chart.data.datasets[1].data.push(sensorData.tem);
-  chart.data.datasets[2].data.push(sensorData.hum);
-  if (chart.data.datasets[0].data.length > 60) {
-    chart.data.labels.shift();
-    chart.data.datasets.forEach((dataset) => {
-      dataset.data.shift();
-    });
-  } 
-  chart.update()
-  console.log("slide() - dataset[0] length: " + chart.data.datasets[0].data.length);
-}
 
 </script>
 
@@ -287,6 +296,7 @@ function slide(sensorData) {
   padding-left: 30px;
   padding-top: 30px;
   padding-bottom: 30px;
+  /* background-color: lightyellow; */
 }
 
 .border {
