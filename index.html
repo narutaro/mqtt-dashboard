@@ -32,8 +32,10 @@
   -->
   <!-- Chart.js -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+<!--
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="js/chartjs-plugin-streaming.min.js"></script>
+-->
   <script type="text/javascript" src="js/topic-name.js"></script>
 </head>
 
@@ -153,15 +155,18 @@ var app = new Vue({
         slide(sensorData);
       });
 
-      pubLoop = setInterval(() => {
-        this.psn++
-        pubTime = Date.now().toString();
-        this.pubAmp = fluctuation(this.pubAmp)
-        this.pubTem = fluctuation(this.pubTem)
-        this.pubHum = fluctuation(this.pubHum)
-        let metric = { "psn": this.psn, "time": pubTime, "name": "sensor1", "amp": this.pubAmp, "tem": this.pubTem, "hum": this.pubHum }
-        this.pub.publish(app.topic, JSON.stringify(metric));
-      }, 1000);
+      function send() {
+        pubLoop = setInterval(() => {
+          app.psn++
+          pubTime = Date.now().toString();
+          app.pubAmp = fluctuation(app.pubAmp)
+          app.pubTem = fluctuation(app.pubTem)
+          app.pubHum = fluctuation(app.pubHum)
+          let metric = { "psn": app.psn, "time": pubTime, "name": "sensor1", "amp": app.pubAmp, "tem": app.pubTem, "hum": app.pubHum }
+          app.pub.publish(app.topic, JSON.stringify(metric));
+        }, 1000);
+      };
+      setTimeout(send, 1000);
 
     },
     stop() {
