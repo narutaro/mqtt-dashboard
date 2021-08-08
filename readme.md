@@ -4,4 +4,4 @@
 
 # Demo
 
-[Demo](https://narutaro.github.io/mqtt-dashboard/)
+[Github Pages](https://narutaro.github.io/mqtt-dashboard/)
